@@ -19,6 +19,10 @@ const Header = () => {
     setMenuOpen(false);
   };
 
+  // ✅ Lógica para mostrar opciones según el rol
+  const isVendedor = currentUser?.Rol === 'vendedor';
+  const isComprador = currentUser?.Rol === 'Comprador';
+
   return (
     <header className="nav">
       <div className="nav__inner container">
@@ -36,31 +40,49 @@ const Header = () => {
         </button>
         
         <nav className={`nav__links ${menuOpen ? 'nav__links--open' : ''}`}>
+          {/* Opciones para TODOS los usuarios */}
           <Link to="/catalog" onClick={handleNavClick}>
             <span className="texto-completo">Catálogo</span>
             <span className="solo-icono">📋</span>
           </Link>
-          <Link to="/nuevo-producto" onClick={handleNavClick}>
-            <span className="texto-completo">Nuevo Producto</span>
-            <span className="solo-icono">➕</span>
-          </Link>
-          <Link to="/reporte-ventas" onClick={handleNavClick}>
-            <span className="texto-completo">Reportes</span>
-            <span className="solo-icono">📊</span>
-          </Link>
-          <Link to="/detalle-compra/compra1" onClick={handleNavClick}>
-            <span className="texto-completo">Mis Compras</span>
-            <span className="solo-icono">📦</span>
-          </Link>
-          <Link to="/cart" className="cart-link" onClick={handleNavClick}>
-            <span className="texto-completo">Carrito ({totalItems})</span>
-            <span className="solo-icono">🛒 ({totalItems})</span>
-          </Link>
-          <Link to="/profile" onClick={handleNavClick}>
-            <span className="texto-completo">Mi Perfil</span>
-            <span className="solo-icono">👤</span>
-          </Link>
+
+          {/* ✅ Opciones solo para VENDEDORES */}
+          {isAuthenticated && isVendedor && (
+            <>
+              <Link to="/nuevo-producto" onClick={handleNavClick}>
+                <span className="texto-completo">Nuevo Producto</span>
+                <span className="solo-icono">➕</span>
+              </Link>
+              <Link to="/reporte-ventas" onClick={handleNavClick}>
+                <span className="texto-completo">Reportes</span>
+                <span className="solo-icono">📊</span>
+              </Link>
+            </>
+          )}
+
+          {/* ✅ Opciones solo para compradores */}
+          {isAuthenticated && isComprador && (
+            <>
+              <Link to="/detalle-compra/compra1" onClick={handleNavClick}>
+                <span className="texto-completo">Mis Compras</span>
+                <span className="solo-icono">📦</span>
+              </Link>
+              <Link to="/cart" className="cart-link" onClick={handleNavClick}>
+                <span className="texto-completo">Carrito ({totalItems})</span>
+                <span className="solo-icono">🛒 ({totalItems})</span>
+              </Link>
+            </>
+          )}
+
+          {/* Opciones para usuarios AUTENTICADOS (todos los roles) */}
+          {isAuthenticated && (
+            <Link to="/profile" onClick={handleNavClick}>
+              <span className="texto-completo">Mi Perfil</span>
+              <span className="solo-icono">👤</span>
+            </Link>
+          )}
           
+          {/* Botón de Login/Logout */}
           {isAuthenticated ? (
             <button onClick={handleLogout} className="btn btn--ghost">
               <span className="texto-completo">Cerrar Sesión</span>

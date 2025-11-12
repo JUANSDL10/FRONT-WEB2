@@ -14,12 +14,16 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-
 // Importar rutas
 const userRoutes = require('./Routes/User');
-
 // Usar rutas
 app.use('/api/users', userRoutes);
+app.use('/api/platforms', require('./Routes/Plataform'));
+app.use('/api/categories', require('./Routes/Category'));
+app.use('/api/companies', require('./Routes/Company'));
+// Servir archivos estáticos (IMPORTANTE para las imágenes)
+app.use('/uploads', express.static('uploads'));
+app.use('/api/games', require('./Routes/Games'));
 
 // Conectar a MongoDB y luego iniciar el servidor
 mongoose.connect('mongodb://localhost:27017/gamecommerce')
@@ -29,10 +33,6 @@ mongoose.connect('mongodb://localhost:27017/gamecommerce')
     // Ahora que la DB está conectada, iniciamos el servidor
     app.listen(port, () => {
       console.log(`🚀 Servidor Express escuchando en http://localhost:${port}`);
-      console.log(`📊 Rutas disponibles:`);
-      console.log(`   http://localhost:${port}/api/users/register`);
-      console.log(`   http://localhost:${port}/api/users/login`);
-      console.log(`   http://localhost:${port}/api/users`);
     });
   })
   .catch(err => {

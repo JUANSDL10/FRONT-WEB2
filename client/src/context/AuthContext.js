@@ -38,6 +38,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateCurrentUser = (updatedUserData) => {
+    setCurrentUser(prevUser => ({
+      ...prevUser,
+      ...updatedUserData
+    }));
+    
+    // Actualizar también en localStorage
+    const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    localStorage.setItem('currentUser', JSON.stringify({
+      ...storedUser,
+      ...updatedUserData
+    }));
+  };
+
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
@@ -48,6 +62,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+     updateCurrentUser, // ✅ AGREGADO
     isAuthenticated: !!currentUser
   };
 

@@ -1,21 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const ProfilePage = () => {
-  const { currentUser, isAuthenticated } = useAuth();
+  const { currentUser, isAuthenticated, updateCurrentUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('perfil');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   // Datos de ejemplo para usuario no logueado
   const guestUser = {
-    nombre_usuario: 'Invitado',
-    correo: 'invitado@ejemplo.com',
-    telefono: 'No especificado',
-    sexo: 'No especificado'
+    Nombre_usuario: 'Invitado',
+    Correo: 'invitado@ejemplo.com',
+    Telefono: 'No especificado',
+    Sexo: 'No especificado',
+    Rol: 'Invitado'
   };
 
   const user = isAuthenticated ? currentUser : guestUser;
+
+  // Estado para el formulario
+  const [formData, setFormData] = useState({
+    Nombre_usuario: '',
+    Correo: '',
+    Telefono: '',
+    Sexo: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  // Cargar datos del usuario cuando cambie
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      setFormData({
+        Nombre_usuario: currentUser.Nombre_usuario || '',
+        Correo: currentUser.Correo || '',
+        Telefono: currentUser.Telefono || '',
+        Sexo: currentUser.Sexo || '',
+        password: '',
+        confirmPassword: ''
+      });
+    }
+  }, [currentUser, isAuthenticated]);
 
   const handleLoginRedirect = () => {
     navigate('/auth');
@@ -25,13 +53,91 @@ const ProfilePage = () => {
     navigate('/auth');
   };
 
-  const handleSubmit = (e) => {
+  // FUNCIÓN ACTUALIZADA: Guardar cambios
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!isAuthenticated) {
       alert('Debes iniciar sesión para editar tu perfil');
       return;
     }
-    alert('Perfil actualizado (simulación)');
+
+    // Validaciones
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      setMessage('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (formData.password && formData.password.length < 6) {
+      setMessage('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      // Preparar datos para enviar (sin campos vacíos)
+      const updateData = {
+        Nombre_usuario: formData.Nombre_usuario,
+        Correo: formData.Correo,
+        Telefono: formData.Telefono,
+        Sexo: formData.Sexo
+      };
+
+      // Solo incluir contraseña si se proporcionó
+      if (formData.password) {
+        updateData.Contrasenia = formData.password;
+      }
+
+      console.log('Enviando datos de actualización:', updateData);
+
+      // Llamar a la API para actualizar
+      const response = await axios.put(`/api/users/${currentUser.id}`, updateData);
+      
+      if (response.data.success) {
+        setMessage('✅ Perfil actualizado exitosamente');
+        
+        // Actualizar el contexto de autenticación
+        updateCurrentUser(response.data.user);
+        
+        // Limpiar campos de contraseña
+        setFormData(prev => ({
+          ...prev,
+          password: '',
+          confirmPassword: ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error al actualizar perfil:', error);
+      setMessage(`❌ Error: ${error.response?.data?.error || 'No se pudo actualizar el perfil'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manejar cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Restablecer formulario
+  const handleDiscard = () => {
+    if (isAuthenticated && currentUser) {
+      setFormData({
+        Nombre_usuario: currentUser.Nombre_usuario || '',
+        Correo: currentUser.Correo || '',
+        Telefono: currentUser.Telefono || '',
+        Sexo: currentUser.Sexo || '',
+        password: '',
+        confirmPassword: ''
+      });
+    }
+    setMessage('');
   };
 
   return (
@@ -73,16 +179,10 @@ const ProfilePage = () => {
             👤 Información Personal
           </button>
           <button 
-            className={`profile-tab ${activeTab === 'pedidos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('pedidos')}
+            className={`profile-tab ${activeTab === 'Reportes' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Reportes')}
           >
-            🛒 Mis Pedidos
-          </button>
-          <button 
-            className={`profile-tab ${activeTab === 'deseos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('deseos')}
-          >
-            ❤️ Lista de Deseos
+            🛒 Mis Reportes
           </button>
         </div>
 
@@ -97,83 +197,101 @@ const ProfilePage = () => {
                     alt="Icono de usuario" 
                     width="120"
                   />
-                  {!isAuthenticated && (
+                  {!isAuthenticated ? (
                     <div className="guest-badge">Invitado</div>
+                  ) : (
+                    <div className={`role-badge ${user.Rol === 'vendedor' ? 'role-vendedor' : 'role-cliente'}`}>
+                      {user.Rol === 'vendedor' ? '🏪 Vendedor' : '🛒 Cliente'}
+                    </div>
                   )}
                 </div>
                 <div className="profile-info">
-                  <h3>{user.nombre_usuario}</h3>
-                  <p>📧 {user.correo}</p>
-                  <p>📞 {user.telefono}</p>
-                  <p>⚧️ {user.sexo}</p>
+                  <h3>{user.Nombre_usuario}</h3>
+                  <p>📧 {user.Correo}</p>
+                  <p>📞 {user.Telefono}</p>
+                  <p>⚧️ {user.Sexo}</p>
+                  <p>🎯 Rol: {user.Rol}</p>
                   {isAuthenticated && (
-                    <p>🎮 Gamer desde 2024 • ⭐ Miembro Premium</p>
+                    <p>🆔 ID: {user.id || user._id}</p>
                   )}
                 </div>
               </div>
 
               <div className="profile-form-container">
                 <h3>Información Personal</h3>
+                
+                {/* Mensaje de estado */}
+                {message && (
+                  <div className={`message ${message.includes('✅') ? 'message-success' : 'message-error'}`}>
+                    {message}
+                  </div>
+                )}
+                
                 <form onSubmit={handleSubmit} className="profile-form">
                   <div className="form-row">
                     <div className="form-group">
-                      <label htmlFor="nombre">Nombre:</label>
+                      <label htmlFor="Nombre_usuario">Nombre de usuario:</label>
                       <input 
                         type="text" 
-                        id="nombre"
-                        name="nombre" 
+                        id="Nombre_usuario"
+                        name="Nombre_usuario" 
                         className="form-control"
-                        placeholder="Tu nombre"
-                        defaultValue={user.nombre_usuario}
+                        placeholder="Tu nombre de usuario"
+                        value={formData.Nombre_usuario}
+                        onChange={handleInputChange}
                         disabled={!isAuthenticated}
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="apellido">Apellido:</label>
+                      <label htmlFor="rol">Rol:</label>
                       <input 
                         type="text" 
-                        id="apellido"
-                        name="apellido" 
+                        id="rol"
+                        name="rol" 
                         className="form-control"
-                        placeholder="Tu apellido"
-                        disabled={!isAuthenticated}
+                        value={user.Rol}
+                        disabled
                       />
+                      <small className="form-help">El rol no se puede cambiar</small>
                     </div>
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="correo">Correo electrónico:</label>
+                    <label htmlFor="Correo">Correo electrónico:</label>
                     <input 
                       type="email" 
-                      id="correo"
-                      name="correo" 
+                      id="Correo"
+                      name="Correo" 
                       className="form-control"
                       placeholder="tu@email.com"
-                      defaultValue={user.correo}
+                      value={formData.Correo}
+                      onChange={handleInputChange}
                       disabled={!isAuthenticated}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="telefono">Teléfono:</label>
+                    <label htmlFor="Telefono">Teléfono:</label>
                     <input 
                       type="tel" 
-                      id="telefono"
-                      name="telefono" 
+                      id="Telefono"
+                      name="Telefono" 
                       className="form-control"
                       placeholder="+52 123 456 7890"
-                      defaultValue={user.telefono}
+                      value={formData.Telefono}
+                      onChange={handleInputChange}
                       disabled={!isAuthenticated}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="sexo">Sexo:</label>
+                    <label htmlFor="Sexo">Sexo:</label>
                     <select 
-                      id="sexo" 
-                      name="sexo" 
+                      id="Sexo" 
+                      name="Sexo" 
                       className="form-select" 
-                      defaultValue={user.sexo}
+                      value={formData.Sexo}
+                      onChange={handleInputChange}
                       disabled={!isAuthenticated}
                     >
                       <option value="">Selecciona tu sexo</option>
@@ -194,6 +312,8 @@ const ProfilePage = () => {
                           name="password" 
                           className="form-control"
                           placeholder="Deja en blanco para no cambiar"
+                          value={formData.password}
+                          onChange={handleInputChange}
                         />
                         <small className="form-help">Mínimo 6 caracteres</small>
                       </div>
@@ -206,6 +326,8 @@ const ProfilePage = () => {
                           name="confirmPassword" 
                           className="form-control"
                           placeholder="Repite la nueva contraseña"
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
                         />
                       </div>
                     </>
@@ -215,12 +337,17 @@ const ProfilePage = () => {
                     <button 
                       type="submit" 
                       className="btn btn--primary"
-                      disabled={!isAuthenticated}
+                      disabled={!isAuthenticated || loading}
                     >
-                      {isAuthenticated ? '💾 Guardar Cambios' : '🔒 Inicia sesión para editar'}
+                      {loading ? '⏳ Guardando...' : '💾 Guardar Cambios'}
                     </button>
                     {isAuthenticated && (
-                      <button type="button" className="btn btn--ghost">
+                      <button 
+                        type="button" 
+                        className="btn btn--ghost"
+                        onClick={handleDiscard}
+                        disabled={loading}
+                      >
                         ↩️ Descartar
                       </button>
                     )}
@@ -230,74 +357,36 @@ const ProfilePage = () => {
             </div>
           )}
 
-          {activeTab === 'pedidos' && (
+          {activeTab === 'Reportes' && (
             <div className="tab-content">
               <div className="tab-placeholder">
-                <h3>🛒 Mis Pedidos</h3>
+                <h3>🛒 Reportes</h3>
                 {!isAuthenticated ? (
                   <div className="guest-message-tab">
-                    <p>Inicia sesión para ver tu historial de pedidos</p>
+                    <p>Inicia sesión para ver tu historial de Reportes</p>
                     <button onClick={handleLoginRedirect} className="btn btn--primary">
                       Iniciar Sesión
                     </button>
                   </div>
                 ) : (
-                  <p>No tienes pedidos realizados</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'deseos' && (
-            <div className="tab-content">
-              <div className="tab-placeholder">
-                <h3>❤️ Lista de Deseos</h3>
-                {!isAuthenticated ? (
-                  <div className="guest-message-tab">
-                    <p>Inicia sesión para gestionar tu lista de deseos</p>
-                    <button onClick={handleLoginRedirect} className="btn btn--primary">
-                      Iniciar Sesión
-                    </button>
+                  <div className="reports-info">
+                    <p><strong>Rol:</strong> {user.Rol}</p>
+                    <p><strong>Usuario:</strong> {user.Nombre_usuario}</p>
+                    <p>No tienes reportes disponibles en este momento.</p>
+                    {user.Rol === 'vendedor' && (
+                      <p>Como vendedor, aquí podrás ver tus reportes de ventas.</p>
+                    )}
+                    {user.Rol === 'cliente' && (
+                      <p>Como cliente, aquí podrás ver tu historial de compras.</p>
+                    )}
                   </div>
-                ) : (
-                  <p>No tienes juegos en tu lista de deseos</p>
                 )}
               </div>
             </div>
-          )}
+          )}          
         </div>
-
-        {/* Estadísticas (solo para usuarios logueados) */}
-        {isAuthenticated && (
-          <div className="profile-stats">
-            <h3>Mis Estadísticas</h3>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon">🛒</div>
-                <div className="stat-number">12</div>
-                <div className="stat-label">Compras Realizadas</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">❤️</div>
-                <div className="stat-number">8</div>
-                <div className="stat-label">En Lista de Deseos</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">⭐</div>
-                <div className="stat-number">15</div>
-                <div className="stat-label">Reseñas Publicadas</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon">🎮</div>
-                <div className="stat-number">5</div>
-                <div className="stat-label">Juegos Publicados</div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );
 };
-
 export default ProfilePage;

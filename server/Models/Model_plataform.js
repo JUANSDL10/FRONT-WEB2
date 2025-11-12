@@ -1,7 +1,7 @@
 const { type } = require('express/lib/response');
 const mongoose = require('mongoose');
-const companySchema = new mongoose.Schema({
-    Nombre_Compania:{
+const PlataformSchema = new mongoose.Schema({
+    Nombre_Plataforma:{
         type: String,
         required: true,
         unique: true
@@ -11,4 +11,4 @@ const companySchema = new mongoose.Schema({
         ref: 'Games'
     }]
 });
-module.exports = mongoose.model('Company', companySchema);
+module.exports = mongoose.model('Plataform', PlataformSchema);

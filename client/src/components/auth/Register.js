@@ -10,7 +10,7 @@ const Register = ({ onSwitchToLogin }) => {
     confirmPassword: '',
     sexo: '',
     telefono: '',
-    tipo_usuario: 'cliente' // Nuevo campo agregado
+    tipo_usuario: '' // Nuevo campo agregado
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -114,19 +114,22 @@ const Register = ({ onSwitchToLogin }) => {
         {/* Nuevo campo: Tipo de usuario */}
         <div className="form-group">
           <label htmlFor="tipo_usuario">Tipo de cuenta</label>
+          
+          {/* ✅ AGREGAR ESTA CLASE: "tipo-usuario-options" */}
           <div className="tipo-usuario-options">
+            
             <label className="tipo-usuario-option">
               <input
                 type="radio"
                 name="tipo_usuario"
-                value="cliente"
-                checked={formData.tipo_usuario === 'cliente'}
+                value="Comprador"
+                checked={formData.tipo_usuario === 'Comprador'}
                 onChange={handleChange}
               />
               <div className="option-card">
                 <div className="option-icon">🛒</div>
                 <div className="option-content">
-                  <div className="option-title">Cliente</div>
+                  <div className="option-title">Comprador</div>
                   <div className="option-description">
                     Compra juegos y accede a toda la comunidad
                   </div>
@@ -152,9 +155,9 @@ const Register = ({ onSwitchToLogin }) => {
                 </div>
               </div>
             </label>
+            
           </div>
         </div>
-        
         <div className="form-group">
           <label htmlFor="sexo">Sexo</label>
           <select
