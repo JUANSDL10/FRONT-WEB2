@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { GameProvider } from './context/GameContext';
@@ -26,16 +26,18 @@ function App() {
               <Header />
               <main>
                 <Routes>
-                   <Route path="/" element={<Home />} />
-  <Route path="/catalog" element={<Catalog />} />
-  <Route path="/producto/:id" element={<ProductoPage />} />
-  <Route path="/detalle-compra/:id" element={<DetalleCompra />} />
-  <Route path="/mis-compras" element={<MisCompras />} />
-  <Route path="/nuevo-producto" element={<NuevoProducto />} />
-  <Route path="/reporte-ventas" element={<ReporteVentas />} />
-  <Route path="/cart" element={<CartPage />} />
-  <Route path="/profile" element={<ProfilePage />} />
-  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="/catalog" element={<Catalog />} />
+                  <Route path="/producto/:id" element={<ProductoPage />} />
+                  <Route path="/detalle-compra/:id" element={<DetalleCompra />} />
+                  <Route path="/mis-compras" element={<MisCompras />} />
+                  <Route path="/nuevo-producto" element={<NuevoProducto />} />
+                  <Route path="/reporte-ventas" element={<ReporteVentas />} />
+                  <Route path="/cart" element={<CartPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  {/* Ruta catch-all: redirige cualquier ruta no existente a Home */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </main>
             </div>
